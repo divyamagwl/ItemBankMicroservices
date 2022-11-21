@@ -21,11 +21,11 @@ public class Author {
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private int id;
 	
-	@Column
+	@Column(unique=true)
 	private String username;
 	@Column
 	private String password;
-	@Column
+	@Column(unique=true)
 	private String email;
 
     public String getUsername() { return this.username; }
