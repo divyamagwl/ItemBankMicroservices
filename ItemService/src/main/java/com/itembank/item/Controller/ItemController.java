@@ -306,45 +306,57 @@ public class ItemController {
 		Item it = new Item();
 
 		IdVersionSequence idVerToUpdate = idVer.get();
-		idVerToUpdate.setVersion(idVer.get().getVersion() + 1);
+		int newVer = idVerToUpdate.getVersion() + 1;
+		idVerToUpdate.setVersion(newVer);
 		IdVersionSequence idv = idVerSeqRepo.save(idVerToUpdate);
 
 		QuestionBank quesToUpdate = ques.get();
-		quesToUpdate.setAuthorId(newItem.getAuthorId());
-		quesToUpdate.setDomain(newItem.getDomain());
-		quesToUpdate.setStatus(newItem.getStatus());
+		if(newItem.getAuthorId() != 0) {			
+			quesToUpdate.setAuthorId(newItem.getAuthorId());
+		}
+		if(newItem.getDomain() != null) {
+			quesToUpdate.setDomain(newItem.getDomain());
+		}
+		if(newItem.getStatus() != null) {			
+			quesToUpdate.setStatus(newItem.getStatus());
+		}
 		QuestionBank q = quesBankRepo.save(quesToUpdate);
 
 		QuestionVersion quesVerToSave = new QuestionVersion();
 		quesVerToSave.setQuesIdVersion(new QuestionIdVersion(q.getId(), idv.getVersion()));
-		quesVerToSave.setType(newItem.getType());
+		if(newItem.getType() != 0) {			
+			quesVerToSave.setType(newItem.getType());
+		}
 		QuestionVersion qv = quesVerRepo.save(quesVerToSave);
 
 		// Subjective
 		if (qv.getType() == 1) {
-			SubjectiveQ subqToSave = new SubjectiveQ(qv.getQuesIdVersion(), newItem.getSubq().getQuesText(),
-					newItem.getSubq().getAns());
-			SubjectiveQ subq = subqRepo.save(subqToSave);
-			it.setSubq(subq);
+			if(newItem.getSubq() != null) {
+				SubjectiveQ subqToSave = new SubjectiveQ(qv.getQuesIdVersion(), newItem.getSubq().getQuesText(),
+						newItem.getSubq().getAns());
+				SubjectiveQ subq = subqRepo.save(subqToSave);
+				it.setSubq(subq);				
+			}
 		}
 		// MCQ
 		else if (qv.getType() == 2) {
+			if(newItem.getMcq() != null) {
+				List<MultipleChoiceQ> mcqList = new ArrayList<MultipleChoiceQ>();
 
-			List<MultipleChoiceQ> mcqList = new ArrayList<MultipleChoiceQ>();
+				int index = 0;
+				for (MultipleChoiceQ mcqObj : newItem.getMcq()) {
+					MultipleChoiceQ mcqToSave = new MultipleChoiceQ(
+							new MCQCompositeKey(qv.getQuesIdVersion().getQuestionId(), qv.getQuesIdVersion().getVersion(),
+									index),
+							mcqObj.getQuesText(), mcqObj.getIsCorrect(), mcqObj.getOptionText());
+					MultipleChoiceQ mcq = mcqRepo.save(mcqToSave);
+					mcqList.add(mcq);
 
-			int index = 0;
-			for (MultipleChoiceQ mcqObj : newItem.getMcq()) {
-				MultipleChoiceQ mcqToSave = new MultipleChoiceQ(
-						new MCQCompositeKey(qv.getQuesIdVersion().getQuestionId(), qv.getQuesIdVersion().getVersion(),
-								index),
-						mcqObj.getQuesText(), mcqObj.getIsCorrect(), mcqObj.getOptionText());
-				MultipleChoiceQ mcq = mcqRepo.save(mcqToSave);
-				mcqList.add(mcq);
+					index++;
+				}
 
-				index++;
+				it.setMcq(mcqList);				
 			}
-
-			it.setMcq(mcqList);
 		}
 
 		it.setId(q.getId());
