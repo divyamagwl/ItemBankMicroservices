@@ -19,6 +19,7 @@ import com.itembank.item.Entity.QuestionBank;
 import com.itembank.item.Entity.QuestionVersion;
 import com.itembank.item.Entity.SubjectiveQ;
 import com.itembank.item.Model.Item;
+import com.itembank.item.Model.MCQCompositeKey;
 import com.itembank.item.Model.QuestionIdVersion;
 import com.itembank.item.repositories.IdVersionSeqRepo;
 import com.itembank.item.repositories.MultipleChoiceQRepo;
@@ -40,7 +41,57 @@ public class ItemController {
 	private SubjectiveQRepo subqRepo;
 	@Autowired
 	private MultipleChoiceQRepo mcqRepo;
+	
+	
+	@RequestMapping(path ="/id/{id}/ver/{ver}")
+	public ResponseEntity<Item> getByIdAndVersion(@PathVariable Integer id, @PathVariable Integer ver) {
+		Optional<QuestionBank> ques = quesBankRepo.findById(id);
+		QuestionIdVersion qIdVer = new QuestionIdVersion(id, ver);
+		Optional<QuestionVersion> quesVer = quesVerRepo.findById(qIdVer);
 
+		if(ques.isEmpty() || quesVer.isEmpty()) {
+			return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+		}
+
+		if(!ques.get().getStatus().matches("ACTIVE")) {
+			return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);			
+		}
+
+		
+		Item it = new Item();
+		
+		if(quesVer.get().getType() == 1) {
+			Optional<SubjectiveQ> subq = subqRepo.findById(qIdVer);
+			
+			if(subq.isEmpty()) {
+				return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+			}
+			
+			it.setSubq(subq.get());
+		}
+		else if(quesVer.get().getType() == 2) {
+			
+			List<MultipleChoiceQ> mcqs = mcqRepo.findByMcqKey_QuestionIdAndMcqKey_Version(id, ver);
+			
+			if(mcqs.size() == 0) {
+				return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+			}
+			
+			it.setMcq(mcqs);
+		}
+
+		
+		it.setId(ques.get().getId());
+		it.setAuthorId(ques.get().getAuthorId());
+		it.setDomain(ques.get().getDomain());
+		it.setStatus(ques.get().getStatus());
+		it.setVersion(quesVer.get().getQuesIdVersion().getVersion());
+		it.setType(quesVer.get().getType());
+
+		return new ResponseEntity<>(it, HttpStatus.OK);		
+	}
+	
+	
 	@PostMapping(path = "/add")
 	public ResponseEntity<Item> addItem(@RequestBody Item newItem) {
 
@@ -71,16 +122,21 @@ public class ItemController {
 			
 			 List<MultipleChoiceQ> mcqList = new ArrayList<MultipleChoiceQ>();  
 			 
+			 int index = 0;
 			 for(MultipleChoiceQ mcqObj : newItem.getMcq()) {  
 				 MultipleChoiceQ mcqToSave = new MultipleChoiceQ(
-						quesVer.getQuesIdVersion(), 
+						new MCQCompositeKey(
+							quesVer.getQuesIdVersion().getQuestionId(),
+							quesVer.getQuesIdVersion().getVersion(),
+							index), 
 						mcqObj.getQuesText(),
-						mcqObj.getOptionNum(),
 						mcqObj.getIsCorrect(),
 						mcqObj.getOptionText()
 					 );
 				 MultipleChoiceQ mcq = mcqRepo.save(mcqToSave);
 				 mcqList.add(mcq);
+				 
+				 index++;
 			}  
 			
 			it.setMcq(mcqList);
@@ -109,7 +165,7 @@ public class ItemController {
 			return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
 		}
 		
-		if(ques.get().getStatus() != "ACTIVE") {
+		if(!ques.get().getStatus().matches("ACTIVE")) {
 			return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);			
 		}
 
@@ -144,17 +200,22 @@ public class ItemController {
 			
 			 List<MultipleChoiceQ> mcqList = new ArrayList<MultipleChoiceQ>();  
 			 
+			 int index = 0;
 			 for(MultipleChoiceQ mcqObj : newItem.getMcq()) {  
 				 MultipleChoiceQ mcqToSave = new MultipleChoiceQ(
-						qv.getQuesIdVersion(), 
+						new MCQCompositeKey(
+							qv.getQuesIdVersion().getQuestionId(),
+							qv.getQuesIdVersion().getVersion(),
+							index), 
 						mcqObj.getQuesText(),
-						mcqObj.getOptionNum(),
 						mcqObj.getIsCorrect(),
 						mcqObj.getOptionText()
 					 );
 				 MultipleChoiceQ mcq = mcqRepo.save(mcqToSave);
 				 mcqList.add(mcq);
-			}  
+				 
+				 index++;
+			 }
 			
 			it.setMcq(mcqList);
 		}

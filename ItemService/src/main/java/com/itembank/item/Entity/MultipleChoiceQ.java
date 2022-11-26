@@ -4,7 +4,7 @@ import javax.persistence.Column;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 
-import com.itembank.item.Model.QuestionIdVersion;
+import com.itembank.item.Model.MCQCompositeKey;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,13 +17,10 @@ import lombok.NoArgsConstructor;
 public class MultipleChoiceQ {
 
     @EmbeddedId
-    private QuestionIdVersion quesIdVersion;
+    private MCQCompositeKey mcqKey;
 	
 	@Column(nullable = false)	
 	private String quesText;
-
-	@Column(nullable = false)	
-	private int optionNum;
 
 	@Column(nullable = false)	
 	private Boolean isCorrect;
@@ -31,12 +28,13 @@ public class MultipleChoiceQ {
 	@Column(nullable = false)	
 	private String optionText;
 
-	public QuestionIdVersion getQuesIdVersion() {
-		return quesIdVersion;
+
+	public MCQCompositeKey getMcqKey() {
+		return mcqKey;
 	}
 
-	public void setQuesIdVersion(QuestionIdVersion quesIdVersion) {
-		this.quesIdVersion = quesIdVersion;
+	public void setMcqKey(MCQCompositeKey mcqKey) {
+		this.mcqKey = mcqKey;
 	}
 
 	public String getQuesText() {
@@ -45,14 +43,6 @@ public class MultipleChoiceQ {
 
 	public void setQuesText(String quesText) {
 		this.quesText = quesText;
-	}
-
-	public int getOptionNum() {
-		return optionNum;
-	}
-
-	public void setOptionNum(int optionNum) {
-		this.optionNum = optionNum;
 	}
 
 	public Boolean getIsCorrect() {
@@ -75,13 +65,12 @@ public class MultipleChoiceQ {
 		super();
 	}
 
-	public MultipleChoiceQ(QuestionIdVersion quesIdVersion, String quesText, int optionNum, Boolean isCorrect,
-			String optionText) {
+	public MultipleChoiceQ(MCQCompositeKey mcqKey, String quesText, Boolean isCorrect, String optionText) {
 		super();
-		this.quesIdVersion = quesIdVersion;
+		this.mcqKey = mcqKey;
 		this.quesText = quesText;
-		this.optionNum = optionNum;
 		this.isCorrect = isCorrect;
 		this.optionText = optionText;
 	}
+
 }
