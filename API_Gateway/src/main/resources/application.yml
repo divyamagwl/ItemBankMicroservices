@@ -16,6 +16,12 @@ spring:
           lb://ITEM-SERVICE
         predicates:
         - Path=/item/**
+
+      - id: PAPER-GEN-SERVICE
+        uri:
+          lb://PAPER-GEN-SERVICE
+        predicates:
+        - Path=/paper/**
               
   application:
     name: API_GATEWAY
