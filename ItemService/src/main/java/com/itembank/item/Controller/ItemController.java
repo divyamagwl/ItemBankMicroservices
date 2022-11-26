@@ -42,6 +42,8 @@ public class ItemController {
 	@Autowired
 	private MultipleChoiceQRepo mcqRepo;
 
+	
+	
 	@RequestMapping(path ="/latest/author/{authorid}")
 	public ResponseEntity<List<Item>> getLatestByAuthor(@PathVariable Integer authorid) {
 		List<QuestionBank> quesList = quesBankRepo.findByAuthorId(authorid);
@@ -139,6 +141,58 @@ public class ItemController {
 		
 		return new ResponseEntity<>(items, HttpStatus.OK);		
 	}
+
+	@RequestMapping(path ="/id/{id}")
+	public ResponseEntity<List<Item>> getById(@PathVariable Integer id) {
+		Optional<QuestionBank> quesOpt = quesBankRepo.findById(id);
+
+		if(quesOpt.isEmpty()) {
+			return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+		}
+
+		if(!quesOpt.get().getStatus().matches("ACTIVE")) {
+			return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);			
+		}
+
+		List<Item> items = new ArrayList<Item>();
+
+		QuestionBank ques = quesOpt.get();
+		int qid = ques.getId();
+		List<QuestionVersion> quesVerList = quesVerRepo.findByQuesIdVersion_QuestionId(qid);
+		
+		for(QuestionVersion quesVer: quesVerList) {
+			
+			int ver = quesVer.getQuesIdVersion().getVersion();
+			
+			Item it = new Item();
+
+			// Subjective
+			if(quesVer.getType() == 1) {
+				Optional<SubjectiveQ> subq = subqRepo.findById(quesVer.getQuesIdVersion());
+				
+				if(subq.isPresent()) {
+					it.setSubq(subq.get());
+				}
+			}
+			// MCQ
+			else if(quesVer.getType() == 2) {
+				List<MultipleChoiceQ> mcqList = mcqRepo.findByMcqKey_QuestionIdAndMcqKey_Version(qid, ver);					
+				it.setMcq(mcqList);
+			}
+
+			it.setId(ques.getId());
+			it.setAuthorId(ques.getAuthorId());
+			it.setDomain(ques.getDomain());
+			it.setStatus(ques.getStatus());
+			it.setVersion(quesVer.getQuesIdVersion().getVersion());
+			it.setType(quesVer.getType());
+			
+			items.add(it);
+		}			
+		
+		return new ResponseEntity<>(items, HttpStatus.OK);		
+	}
+	
 	
 	@RequestMapping(path ="/id/{id}/ver/{ver}")
 	public ResponseEntity<Item> getByIdAndVersion(@PathVariable Integer id, @PathVariable Integer ver) {
