@@ -2,8 +2,6 @@ package com.itembank.item.Model;
 
 import java.util.List;
 
-import javax.persistence.Column;
-
 import com.itembank.item.Entity.MultipleChoiceQ;
 import com.itembank.item.Entity.SubjectiveQ;
 

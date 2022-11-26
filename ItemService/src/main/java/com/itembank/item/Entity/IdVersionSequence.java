@@ -36,6 +36,10 @@ public class IdVersionSequence {
 		this.version = version;
 	}
 
+	public IdVersionSequence() {
+		super();
+	}
+
 	public IdVersionSequence(int questionId, int version) {
 		super();
 		this.questionId = questionId;
