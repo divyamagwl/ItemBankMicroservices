@@ -42,6 +42,60 @@ public class ItemController {
 	@Autowired
 	private MultipleChoiceQRepo mcqRepo;
 
+	@RequestMapping(path ="/latest/author/{authorid}")
+	public ResponseEntity<List<Item>> getLatestByAuthor(@PathVariable Integer authorid) {
+		List<QuestionBank> quesList = quesBankRepo.findByAuthorId(authorid);
+				
+		List<Item> items = new ArrayList<Item>();
+		
+		for(QuestionBank ques: quesList) {			
+			int qid = ques.getId();
+			Optional<IdVersionSequence> idVer = idVerSeqRepo.findById(qid);
+			
+			if(idVer.isEmpty()) {
+				continue;
+			}
+							
+			int ver = idVer.get().getVersion();
+			
+			Optional<QuestionVersion> quesVerOpt = quesVerRepo.findById(new QuestionIdVersion(qid, ver));
+
+			if(quesVerOpt.isEmpty()) {
+				continue;
+			}
+			
+			QuestionVersion quesVer = quesVerOpt.get();
+
+			Item it = new Item();
+
+			// Subjective
+			if(quesVer.getType() == 1) {
+				Optional<SubjectiveQ> subq = subqRepo.findById(quesVer.getQuesIdVersion());
+				
+				if(subq.isPresent()) {
+					it.setSubq(subq.get());
+				}
+			}
+			// MCQ
+			else if(quesVer.getType() == 2) {
+				List<MultipleChoiceQ> mcqList = mcqRepo.findByMcqKey_QuestionIdAndMcqKey_Version(qid, ver);					
+				it.setMcq(mcqList);
+			}
+
+			it.setId(ques.getId());
+			it.setAuthorId(ques.getAuthorId());
+			it.setDomain(ques.getDomain());
+			it.setStatus(ques.getStatus());
+			it.setVersion(quesVer.getQuesIdVersion().getVersion());
+			it.setType(quesVer.getType());
+			
+			items.add(it);
+		}			
+		
+		return new ResponseEntity<>(items, HttpStatus.OK);		
+	}
+	
+	
 	@RequestMapping(path ="/author/{authorid}")
 	public ResponseEntity<List<Item>> getByAuthor(@PathVariable Integer authorid) {
 		List<QuestionBank> quesList = quesBankRepo.findByAuthorId(authorid);
