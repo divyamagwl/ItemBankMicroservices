@@ -45,4 +45,14 @@ public class AuthorController {
 		return new ResponseEntity<>(author, HttpStatus.OK);
 	}
 
+	@RequestMapping(path ="/login")
+	public ResponseEntity<Author> login(@RequestBody Author loginAuthor) {
+		
+		Author author = repo.findByUsername(loginAuthor.getUsername());
+		if(!author.getPassword().matches(loginAuthor.getPassword())) {
+			return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+		}
+		return new ResponseEntity<>(author, HttpStatus.OK);			
+	}
+
 }
