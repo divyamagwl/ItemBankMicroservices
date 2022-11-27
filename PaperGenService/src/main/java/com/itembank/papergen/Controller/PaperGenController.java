@@ -41,7 +41,7 @@ public class PaperGenController {
 	@Autowired
 	private MultipleChoiceQRepo mcqRepo;
 
-	@RequestMapping(path = "/generate")
+	@PostMapping(path = "/generate")
 	public ResponseEntity<List<Item>> getRandomPaper(@RequestBody PaperConfig newPaperConfig) {
 		String domain = newPaperConfig.getDomain();
 		int limit = newPaperConfig.getLimit();
