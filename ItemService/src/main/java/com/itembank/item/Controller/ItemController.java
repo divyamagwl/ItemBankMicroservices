@@ -190,6 +190,61 @@ public class ItemController {
 		return new ResponseEntity<>(items, HttpStatus.OK);
 	}
 
+	@RequestMapping(path = "/latest/id/{id}")
+	public ResponseEntity<Item> getLatestById(@PathVariable Integer id) {
+		Optional<QuestionBank> quesOpt = quesBankRepo.findById(id);
+
+		if (quesOpt.isEmpty()) {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		}
+
+		if (!quesOpt.get().getStatus().matches("ACTIVE")) {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		}
+
+		QuestionBank ques = quesOpt.get();
+		
+		Optional<IdVersionSequence> idVer = idVerSeqRepo.findById(id);
+
+		if (idVer.isEmpty()) {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		}
+
+		int ver = idVer.get().getVersion();
+		Optional<QuestionVersion> quesVerOpt = quesVerRepo.findById(new QuestionIdVersion(id, ver));
+
+		if (quesVerOpt.isEmpty()) {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		}
+
+		QuestionVersion quesVer = quesVerOpt.get();
+
+		Item it = new Item();
+
+		// Subjective
+		if (quesVer.getType() == 1) {
+			Optional<SubjectiveQ> subq = subqRepo.findById(quesVer.getQuesIdVersion());
+
+			if (subq.isPresent()) {
+				it.setSubq(subq.get());
+			}
+		}
+		// MCQ
+		else if (quesVer.getType() == 2) {
+			List<MultipleChoiceQ> mcqList = mcqRepo.findByMcqKey_QuestionIdAndMcqKey_Version(id, ver);
+			it.setMcq(mcqList);
+		}
+
+		it.setId(ques.getId());
+		it.setAuthorId(ques.getAuthorId());
+		it.setDomain(ques.getDomain());
+		it.setStatus(ques.getStatus());
+		it.setVersion(quesVer.getQuesIdVersion().getVersion());
+		it.setType(quesVer.getType());
+		
+		return new ResponseEntity<>(it, HttpStatus.OK);
+	}
+	
 	@RequestMapping(path = "/id/{id}/ver/{ver}")
 	public ResponseEntity<Item> getByIdAndVersion(@PathVariable Integer id, @PathVariable Integer ver) {
 		Optional<QuestionBank> ques = quesBankRepo.findById(id);
