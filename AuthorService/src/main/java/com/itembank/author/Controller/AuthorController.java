@@ -45,7 +45,7 @@ public class AuthorController {
 		return new ResponseEntity<>(author, HttpStatus.OK);
 	}
 
-	@RequestMapping(path ="/login")
+	@PostMapping(path ="/login")
 	public ResponseEntity<Author> login(@RequestBody Author loginAuthor) {
 		
 		Author author = repo.findByUsername(loginAuthor.getUsername());
